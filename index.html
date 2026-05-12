@@ -1228,11 +1228,11 @@
 
   <h1>Know What's <span class="highlight">Broken</span> Before Your Customers Do</h1>
 
-  <p class="hero-desc">We audit your website across performance, SEO, accessibility, security, and design — then deliver a detailed report to your inbox.</p>
+  <p class="hero-desc">We audit your website across performance, SEO, AEO, GEO, accessibility, security, and design then deliver a detailed report to your inbox.</p>
 
   <div class="audit-input-wrapper" id="auditInput">
     <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z"/><path d="M3.6 9h16.8M3.6 15h16.8"/><path d="M12 3a14.5 14.5 0 0 1 4 9 14.5 14.5 0 0 1-4 9 14.5 14.5 0 0 1-4-9 14.5 14.5 0 0 1 4-9Z"/></svg>
-    <input type="url" id="websiteUrl" placeholder="Enter your website URL" autocomplete="url">
+    <input type="text" id="websiteUrl" placeholder="Enter your website URL" autocomplete="url">
     <button class="audit-btn" onclick="openModal()">Get Free Audit</button>
   </div>
 
@@ -1582,19 +1582,22 @@
     <p class="modal-sub">We'll analyze your website and send a detailed audit report to your email within 1 hour.</p>
 
     <form class="modal-form" id="modalForm" onsubmit="handleSubmit(event)">
+      <input type="hidden" name="access_key" value="322f987e-71c7-4955-a618-c507f4fa9b78">
+      <input type="hidden" name="subject" value="New Website Audit Request — SARVAYA">
+      <input type="hidden" name="from_name" value="SARVAYA Website Audit">
       <div class="form-group">
         <label>Website URL</label>
-        <input type="url" id="modalWebsite" placeholder="https://example.com" required class="prefilled">
+        <input type="text" name="website" id="modalWebsite" placeholder="example.com" required class="prefilled">
       </div>
       <div class="form-group">
         <label>Email Address</label>
-        <input type="email" id="modalEmail" placeholder="you@company.com" required>
+        <input type="email" name="email" id="modalEmail" placeholder="you@company.com" required>
       </div>
       <div class="form-group">
         <label>Phone Number</label>
-        <input type="tel" id="modalPhone" placeholder="+91 98765 43210" required>
+        <input type="tel" name="phone" id="modalPhone" placeholder="+91 98765 43210" required>
       </div>
-      <button type="submit" class="modal-submit">Request Free Audit</button>
+      <button type="submit" class="modal-submit" id="submitBtn">Request Free Audit</button>
       <div class="modal-note">
         <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20"><path d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"/></svg>
         Your data is safe. We only use it to deliver your audit.
@@ -1641,20 +1644,36 @@
     document.body.style.overflow = '';
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
 
-    const website = document.getElementById('modalWebsite').value;
-    const email = document.getElementById('modalEmail').value;
-    const phone = document.getElementById('modalPhone').value;
+    const form = document.getElementById('modalForm');
+    let url = document.getElementById('modalWebsite').value.trim();
+    if (url && !/^https?:\/\//i.test(url)) url = 'https://' + url;
+    document.getElementById('modalWebsite').value = url;
+    const formData = new FormData(form);
 
-    const formData = { website, email, phone, timestamp: new Date().toISOString() };
-    console.log('Audit request:', formData);
-
-    document.getElementById('modalForm').classList.add('hidden');
-    document.getElementById('modalSuccess').classList.add('active');
-
-    setTimeout(closeModal, 3000);
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('modalForm').classList.add('hidden');
+        document.getElementById('modalSuccess').classList.add('active');
+        setTimeout(closeModal, 3000);
+      } else {
+        btn.textContent = 'Something went wrong. Try again.';
+        btn.disabled = false;
+      }
+    } catch {
+      btn.textContent = 'Network error. Try again.';
+      btn.disabled = false;
+    }
   }
 
   document.addEventListener('keydown', function(e) {
